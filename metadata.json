@@ -1,0 +1,8 @@
+{
+  "name": "Copy of Copy of GlowBook - Salon Marketplace",
+  "description": "A modern beauty and wellness marketplace clone similar to Fresha. Features salon listings, service booking, and an AI-powered style consultant using Google Gemini.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ]
+}
