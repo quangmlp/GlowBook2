@@ -20,6 +20,7 @@ import BusinessDashboard from './components/BusinessDashboard';
 import UserDashboard from './components/UserDashboard'; // New Import
 import { Salon, ViewState, Service, User, Staff, Review, HairRecommendation, StaffStatus, Feedback, WebStats, Appointment, Notification, UserStats } from './types';
 import { generateSalonDescription } from './services/gemini';
+import { getStoredFeedbacks, saveStoredFeedback } from './services/storage';
 import { ChevronLeft, MapPin, Scissors, Sparkles, Smile, Footprints, User as UserIcon, Heart, TrendingUp, ThumbsUp, Calendar, Camera, Activity, Clock, Users, AlertCircle } from 'lucide-react';
 
 // --- DATA POOLS FOR GENERATION ---
@@ -228,10 +229,15 @@ const App: React.FC = () => {
   const [consultationResult, setConsultationResult] = useState<HairRecommendation | null>(null);
 
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
-  const [feedbacks, setFeedbacks] = useState<Feedback[]>([
-      { id: '1', userType: 'customer', rating: 5, q1: 'Fast Search', q2: 'None', q3: 'Yes', q4: 'More detailed maps', timestamp: '10/24/2023, 10:30 AM' },
-      { id: '2', userType: 'business', rating: 4, q1: 'Staff Management', q2: 'Mobile', q3: 'Subscription', q4: 'Payroll features', timestamp: '10/24/2023, 11:15 AM' }
-  ]);
+  
+  // Use persistent storage for feedbacks
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+  
+  useEffect(() => {
+      // Load initial feedbacks from local storage
+      setFeedbacks(getStoredFeedbacks());
+  }, []);
+
   const [webStats, setWebStats] = useState<WebStats>({
       totalVisits: 15420, uniqueVisitors: 8340, bounceRate: '42%', avgSession: '4m 32s',
       revenueCommission: 1250, revenueSubscription: 4000, revenueAds: 1500
@@ -364,7 +370,8 @@ const App: React.FC = () => {
   };
 
   const handleFeedbackSubmit = (newFeedback: Feedback) => {
-      setFeedbacks(prev => [newFeedback, ...prev]);
+      const updated = saveStoredFeedback(newFeedback);
+      setFeedbacks(updated);
   };
 
   const handleSalonUpdate = (updated: Salon) => {

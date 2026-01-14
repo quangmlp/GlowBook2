@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { X, Star, Gift, Send, CheckCircle } from 'lucide-react';
+
+import React, { useState, useEffect } from 'react';
+import { X, Star, Gift, Send, CheckCircle, AlertCircle } from 'lucide-react';
 import { Feedback } from '../types';
 
 interface FeedbackModalProps {
@@ -9,26 +10,78 @@ interface FeedbackModalProps {
   initialUserType?: 'customer' | 'business';
 }
 
+const CUSTOMER_OPTIONS = {
+    q1: ['Beautiful Interface', 'Fast Search', 'Clear Information', 'Instant Confirmation', 'Quality of Salons', 'Other'],
+    q2: ['None', 'Slow Loading', 'Confusing Navigation', 'Login Issues', 'Booking Errors', 'Other'],
+    q3: ['Yes, absolutely', 'Yes, but need more reviews', 'No, looks fake', 'Maybe, if payment is secure', 'Other'],
+    q4: ['Loyalty Points', 'Chat with Stylist', 'Video Call Consultation', 'Home Service', 'Dark Mode', 'Other']
+};
+
+const BUSINESS_OPTIONS = {
+    q1: ['Staff Management', 'Revenue Stats', 'Auto Email', 'CRM (Customer Profile)', 'Inventory', 'Other'],
+    q2: ['Mobile App', 'Desktop/Laptop', 'Tablet', 'Both equally', 'Other'],
+    q3: ['Commission per booking', 'Monthly Subscription', 'Freemium', 'Prepaid Credits', 'Other'],
+    q4: ['Inventory Management', 'Payroll', 'Marketing Tools', 'POS Integration', 'SMS Marketing', 'Other']
+};
+
 const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmit, initialUserType = 'customer' }) => {
   const [step, setStep] = useState<'type' | 'form' | 'success'>('type');
   const [userType, setUserType] = useState<'customer' | 'business'>(initialUserType);
   const [rating, setRating] = useState(0);
-  const [answers, setAnswers] = useState({
-    q1: '', // Feature/Useful
-    q2: '', // Pain/Core
-    q3: '', // Trust/Device
-    q4: '', // Wishlist/Missing
+  const [error, setError] = useState<string | null>(null);
+  
+  // State to hold the selection
+  const [selections, setSelections] = useState({
+      q1: '', q2: '', q3: '', q4: ''
   });
+  // State to hold the custom text input if "Other" is selected
+  const [customInputs, setCustomInputs] = useState({
+      q1: '', q2: '', q3: '', q4: ''
+  });
+
+  const options = userType === 'customer' ? CUSTOMER_OPTIONS : BUSINESS_OPTIONS;
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation
+    if (rating === 0) {
+        setError("Please select a star rating (1-5).");
+        return;
+    }
+
+    // Check if all dropdowns are selected
+    if (!selections.q1 || !selections.q2 || !selections.q3 || !selections.q4) {
+        setError("Please answer all questions.");
+        return;
+    }
+
+    // Check if 'Other' is selected but input is empty
+    if ((selections.q1 === 'Other' && !customInputs.q1.trim()) ||
+        (selections.q2 === 'Other' && !customInputs.q2.trim()) ||
+        (selections.q3 === 'Other' && !customInputs.q3.trim()) ||
+        (selections.q4 === 'Other' && !customInputs.q4.trim())) {
+        setError("Please provide details for the 'Other' options selected.");
+        return;
+    }
+
+    setError(null);
+
+    // Combine selection and custom input
+    const finalAnswers = {
+        q1: selections.q1 === 'Other' ? (customInputs.q1 || 'Other') : selections.q1,
+        q2: selections.q2 === 'Other' ? (customInputs.q2 || 'Other') : selections.q2,
+        q3: selections.q3 === 'Other' ? (customInputs.q3 || 'Other') : selections.q3,
+        q4: selections.q4 === 'Other' ? (customInputs.q4 || 'Other') : selections.q4,
+    };
+
     const newFeedback: Feedback = {
       id: Date.now().toString(),
       userType,
       rating,
-      ...answers,
+      ...finalAnswers,
       timestamp: new Date().toLocaleString(),
     };
     onSubmit(newFeedback);
@@ -38,9 +91,50 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmit
   const reset = () => {
     setStep('type');
     setRating(0);
-    setAnswers({ q1: '', q2: '', q3: '', q4: '' });
+    setError(null);
+    setSelections({ q1: '', q2: '', q3: '', q4: '' });
+    setCustomInputs({ q1: '', q2: '', q3: '', q4: '' });
     onClose();
   };
+
+  const handleSelectionChange = (key: 'q1' | 'q2' | 'q3' | 'q4', value: string) => {
+      setSelections(prev => ({ ...prev, [key]: value }));
+      if (error) setError(null); // Clear error on interaction
+  };
+
+  const handleCustomInputChange = (key: 'q1' | 'q2' | 'q3' | 'q4', value: string) => {
+      setCustomInputs(prev => ({ ...prev, [key]: value }));
+      if (error) setError(null);
+  };
+
+  const renderSelectGroup = (
+      question: string, 
+      key: 'q1' | 'q2' | 'q3' | 'q4', 
+      optionsList: string[], 
+      placeholder: string
+  ) => (
+      <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">{question}</label>
+          <select 
+              className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-secondary mb-2 bg-white"
+              value={selections[key]}
+              onChange={(e) => handleSelectionChange(key, e.target.value)}
+          >
+              <option value="">Select an option...</option>
+              {optionsList.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+          </select>
+          
+          {selections[key] === 'Other' && (
+              <input 
+                  type="text"
+                  className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-secondary bg-gray-50 animate-fade-in"
+                  placeholder={placeholder}
+                  value={customInputs[key]}
+                  onChange={(e) => handleCustomInputChange(key, e.target.value)}
+              />
+          )}
+      </div>
+  );
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
@@ -49,7 +143,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmit
           <X className="w-5 h-5 text-gray-500" />
         </button>
 
-        {/* STEP 1: SELECT TYPE (Skip if pre-defined or just user selection) */}
+        {/* STEP 1: SELECT TYPE */}
         {step === 'type' && (
           <div className="p-8 text-center space-y-6">
             <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto text-secondary">
@@ -88,7 +182,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmit
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">
                   {userType === 'customer' 
-                    ? 'How would you rate your booking experience? (1-5 stars)' 
+                    ? 'How would you rate your booking experience? (1-5)' 
                     : 'Does this dashboard save you time? (1-10)'}
                 </label>
                 <div className="flex gap-2">
@@ -96,97 +190,50 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmit
                      <button
                        key={star}
                        type="button"
-                       onClick={() => setRating(star)}
+                       onClick={() => { setRating(star); if(error) setError(null); }}
                        className={`p-1 transition-transform hover:scale-110 ${rating >= star ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
                      >
                        <Star className="w-8 h-8 fill-current" />
                      </button>
                    ))}
-                   {userType === 'business' && <span className="text-xs text-gray-400 flex items-center ml-2">(Scale scaled to 5 for UI)</span>}
+                   {userType === 'business' && <span className="text-xs text-gray-400 flex items-center ml-2">(Scaled to 5 for UI)</span>}
                 </div>
               </div>
 
-              {/* Question 2: Multiple Choice */}
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">
-                   {userType === 'customer' 
-                    ? 'What did you like most?' 
-                    : 'Most important feature for you?'}
-                </label>
-                <select 
-                  className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-secondary"
-                  required
-                  value={answers.q1}
-                  onChange={(e) => setAnswers({...answers, q1: e.target.value})}
-                >
-                  <option value="">Select an option</option>
-                  {userType === 'customer' ? (
-                    <>
-                      <option value="Beautiful Interface">Beautiful Interface</option>
-                      <option value="Fast Search">Fast Search</option>
-                      <option value="Clear Info">Clear Information</option>
-                      <option value="Instant Confirmation">Instant Confirmation</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="Staff Management">Staff Management</option>
-                      <option value="Revenue Stats">Revenue Statistics</option>
-                      <option value="Auto Email">Automated Emails</option>
-                      <option value="CRM">Customer Profile (CRM)</option>
-                    </>
-                  )}
-                </select>
-              </div>
+              {renderSelectGroup(
+                  userType === 'customer' ? 'What did you like most?' : 'Most important feature for you?',
+                  'q1',
+                  options.q1,
+                  'Please tell us more...'
+              )}
 
-              {/* Question 3: Text Input */}
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">
-                   {userType === 'customer' 
-                    ? 'Did you face any difficulties?' 
-                    : 'Do you prefer Mobile or PC for management?'}
-                </label>
-                <input 
-                  type="text"
-                  className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-secondary"
-                  placeholder={userType === 'customer' ? 'e.g., Slow loading...' : 'Mobile / PC'}
-                  required
-                  value={answers.q2}
-                  onChange={(e) => setAnswers({...answers, q2: e.target.value})}
-                />
-              </div>
+              {renderSelectGroup(
+                  userType === 'customer' ? 'Did you face any difficulties?' : 'Do you prefer Mobile or PC?',
+                  'q2',
+                  options.q2,
+                  'Please describe the issue...'
+              )}
 
-              {/* Question 4: Trust/Payment */}
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">
-                   {userType === 'customer' 
-                    ? 'Would you trust this site for a real booking?' 
-                    : 'Preferred payment model?'}
-                </label>
-                <input 
-                  type="text"
-                  className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-secondary"
-                  placeholder={userType === 'customer' ? 'Yes/No - Why?' : 'Monthly Subscription / Per Booking'}
-                  required
-                  value={answers.q3}
-                  onChange={(e) => setAnswers({...answers, q3: e.target.value})}
-                />
-              </div>
+              {renderSelectGroup(
+                  userType === 'customer' ? 'Would you trust this site for a real booking?' : 'Preferred payment model?',
+                  'q3',
+                  options.q3,
+                  'Why or why not?'
+              )}
 
-              {/* Question 5: Wishlist */}
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">
-                   {userType === 'customer' 
-                    ? 'What feature should we add?' 
-                    : 'What is missing for you to use this long-term?'}
-                </label>
-                <textarea 
-                  className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-secondary h-24"
-                  placeholder="Your suggestions..."
-                  required
-                  value={answers.q4}
-                  onChange={(e) => setAnswers({...answers, q4: e.target.value})}
-                />
-              </div>
+              {renderSelectGroup(
+                  userType === 'customer' ? 'What feature should we add?' : 'What is missing for long-term use?',
+                  'q4',
+                  options.q4,
+                  'Your suggestion...'
+              )}
+              
+              {error && (
+                <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-bold flex items-center gap-2 animate-fade-in border border-red-100">
+                    <AlertCircle className="w-5 h-5 shrink-0" />
+                    {error}
+                </div>
+              )}
 
               <button 
                 type="submit"
