@@ -161,6 +161,7 @@ export interface Appointment {
   date?: string; 
   salonName?: string;
   salonImage?: string;
+  isReviewed?: boolean;
 }
 
 // NEW: User Notifications & Stats

@@ -17,7 +17,7 @@ import FeedbackModal from './components/FeedbackModal';
 import FloatingFeedbackButton from './components/FloatingFeedbackButton';
 import AdminDashboard from './components/AdminDashboard';
 import BusinessDashboard from './components/BusinessDashboard';
-import UserDashboard from './components/UserDashboard'; // New Import
+import UserDashboard from './components/UserDashboard'; 
 import { Salon, ViewState, Service, User, Staff, Review, HairRecommendation, StaffStatus, Feedback, WebStats, Appointment, Notification, UserStats } from './types';
 import { generateSalonDescription } from './services/gemini';
 import { getStoredFeedbacks, saveStoredFeedback } from './services/storage';
@@ -233,9 +233,13 @@ const App: React.FC = () => {
   // Use persistent storage for feedbacks
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   
+  // Load data async on mount
   useEffect(() => {
-      // Load initial feedbacks from local storage
-      setFeedbacks(getStoredFeedbacks());
+      const loadData = async () => {
+          const data = await getStoredFeedbacks();
+          setFeedbacks(data);
+      };
+      loadData();
   }, []);
 
   const [webStats, setWebStats] = useState<WebStats>({
@@ -273,6 +277,8 @@ const App: React.FC = () => {
   // Handle Role Login redirection & Data Loading
   useEffect(() => {
       if (currentUser?.type === 'admin') {
+          // Re-fetch feedbacks when admin logs in to ensure latest data
+          getStoredFeedbacks().then(setFeedbacks);
           setView(ViewState.ADMIN_DASHBOARD);
       } else if (currentUser?.type === 'business') {
           setView(ViewState.BUSINESS_DASHBOARD);
@@ -369,8 +375,9 @@ const App: React.FC = () => {
     setFilteredSalons(result);
   };
 
-  const handleFeedbackSubmit = (newFeedback: Feedback) => {
-      const updated = saveStoredFeedback(newFeedback);
+  const handleFeedbackSubmit = async (newFeedback: Feedback) => {
+      // Async save
+      const updated = await saveStoredFeedback(newFeedback);
       setFeedbacks(updated);
   };
 

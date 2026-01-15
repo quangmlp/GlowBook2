@@ -4,8 +4,9 @@ import { Appointment, Notification, User, UserStats } from '../types';
 import { 
   User as UserIcon, Calendar, Clock, DollarSign, 
   MapPin, Bell, Scissors, ChevronRight, LogOut, 
-  TrendingUp, Star, AlertCircle, CheckCircle, RefreshCcw
+  TrendingUp, Star, AlertCircle, CheckCircle, RefreshCcw, MessageSquare, Edit3
 } from 'lucide-react';
+import SalonReviewModal from './SalonReviewModal';
 
 interface UserDashboardProps {
   user: User;
@@ -20,8 +21,29 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
     user, appointments, notifications, stats, onExit, onReadNotification 
 }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'notifications'>('overview');
+  const [localAppointments, setLocalAppointments] = useState<Appointment[]>(appointments);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [reviewTarget, setReviewTarget] = useState<Appointment | null>(null);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  const handleOpenReview = (app: Appointment) => {
+      setReviewTarget(app);
+      setIsReviewModalOpen(true);
+  };
+
+  const handleReviewSubmit = (id: string, rating: number, comment: string) => {
+      // Update local state to show "Reviewed" status
+      setLocalAppointments(prev => prev.map(app => 
+          app.id === id ? { ...app, isReviewed: true } : app
+      ));
+      
+      setIsReviewModalOpen(false);
+      setReviewTarget(null);
+      
+      // In a real app, this would post to the backend
+      alert(`Thank you! Review submitted for ${reviewTarget?.salonName}.\nRating: ${rating}/5`);
+  };
 
   const renderOverview = () => (
       <div className="space-y-6 animate-fade-in">
@@ -97,12 +119,12 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
   const renderHistory = () => (
       <div className="space-y-4 animate-fade-in">
           <h2 className="text-xl font-bold text-primary mb-2">Booking History</h2>
-          {appointments.length === 0 ? (
+          {localAppointments.length === 0 ? (
               <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
                   <p className="text-gray-500">No appointments yet.</p>
               </div>
           ) : (
-              appointments.map((app) => (
+              localAppointments.map((app) => (
                   <div key={app.id} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-md transition-shadow">
                       <div className="flex items-start gap-4">
                           <img 
@@ -122,7 +144,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
                           </div>
                       </div>
                       
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-col sm:flex-row items-center gap-3">
                           <div className={`px-3 py-1 rounded-full text-xs font-bold ${
                               app.status === 'completed' ? 'bg-green-100 text-green-700' :
                               app.status === 'cancelled' ? 'bg-red-100 text-red-700' :
@@ -130,9 +152,26 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
                           }`}>
                               {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
                           </div>
-                          <button className="p-2 text-gray-400 hover:text-secondary hover:bg-purple-50 rounded-full transition-colors" title="Rebook">
-                              <RefreshCcw className="w-5 h-5" />
-                          </button>
+                          
+                          <div className="flex gap-2">
+                             {app.status === 'completed' && !app.isReviewed && (
+                                 <button 
+                                   onClick={() => handleOpenReview(app)}
+                                   className="px-4 py-2 bg-secondary text-white text-xs font-bold rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1 shadow-sm"
+                                 >
+                                     <Edit3 className="w-3 h-3" /> Write Review
+                                 </button>
+                             )}
+                             {app.isReviewed && (
+                                 <div className="px-3 py-2 text-gray-400 text-xs font-bold flex items-center gap-1">
+                                     <CheckCircle className="w-3 h-3" /> Reviewed
+                                 </div>
+                             )}
+                             
+                             <button className="p-2 text-gray-400 hover:text-secondary hover:bg-purple-50 rounded-full transition-colors" title="Rebook">
+                                 <RefreshCcw className="w-5 h-5" />
+                             </button>
+                          </div>
                       </div>
                   </div>
               ))
@@ -197,64 +236,74 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div className="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full z-20">
-          <div className="p-6 border-b border-gray-100">
-              <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-secondary to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg overflow-hidden">
-                      {user.avatar ? 
-                        <img 
-                          src={user.avatar} 
-                          className="w-full h-full object-cover" 
-                          onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&color=fff`; }}
-                        /> 
-                        : user.name.charAt(0)
-                      }
-                  </div>
-                  <div>
-                      <div className="font-bold text-gray-900 text-sm truncate w-32">{user.name}</div>
-                      <div className="text-xs text-gray-400">Member since 2023</div>
-                  </div>
-              </div>
-          </div>
-          
-          <nav className="flex-1 p-4 space-y-2">
-              <button onClick={() => setActiveTab('overview')} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'overview' ? 'bg-gray-900 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}>
-                  <div className="flex items-center gap-3"><TrendingUp className="w-5 h-5" /> My Stats</div>
-              </button>
-              <button onClick={() => setActiveTab('history')} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'history' ? 'bg-gray-900 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}>
-                  <div className="flex items-center gap-3"><Calendar className="w-5 h-5" /> Bookings</div>
-              </button>
-              <button onClick={() => setActiveTab('notifications')} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'notifications' ? 'bg-gray-900 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}>
-                  <div className="flex items-center gap-3"><Bell className="w-5 h-5" /> Updates</div>
-                  {unreadCount > 0 && <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{unreadCount}</span>}
-              </button>
-          </nav>
+    <>
+        <div className="min-h-screen bg-gray-50 flex">
+        {/* Sidebar */}
+        <div className="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full z-20">
+            <div className="p-6 border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-secondary to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg overflow-hidden">
+                        {user.avatar ? 
+                            <img 
+                            src={user.avatar} 
+                            className="w-full h-full object-cover" 
+                            onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&color=fff`; }}
+                            /> 
+                            : user.name.charAt(0)
+                        }
+                    </div>
+                    <div>
+                        <div className="font-bold text-gray-900 text-sm truncate w-32">{user.name}</div>
+                        <div className="text-xs text-gray-400">Member since 2023</div>
+                    </div>
+                </div>
+            </div>
+            
+            <nav className="flex-1 p-4 space-y-2">
+                <button onClick={() => setActiveTab('overview')} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'overview' ? 'bg-gray-900 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}>
+                    <div className="flex items-center gap-3"><TrendingUp className="w-5 h-5" /> My Stats</div>
+                </button>
+                <button onClick={() => setActiveTab('history')} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'history' ? 'bg-gray-900 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}>
+                    <div className="flex items-center gap-3"><Calendar className="w-5 h-5" /> Bookings</div>
+                </button>
+                <button onClick={() => setActiveTab('notifications')} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'notifications' ? 'bg-gray-900 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}>
+                    <div className="flex items-center gap-3"><Bell className="w-5 h-5" /> Updates</div>
+                    {unreadCount > 0 && <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{unreadCount}</span>}
+                </button>
+            </nav>
 
-          <div className="p-4 border-t border-gray-100">
-              <button onClick={onExit} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 transition-colors">
-                  <LogOut className="w-5 h-5" /> Sign Out
-              </button>
-          </div>
-      </div>
+            <div className="p-4 border-t border-gray-100">
+                <button onClick={onExit} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 transition-colors">
+                    <LogOut className="w-5 h-5" /> Sign Out
+                </button>
+            </div>
+        </div>
 
-      {/* Main Content */}
-      <div className="flex-1 ml-64 p-8 overflow-y-auto">
-          <header className="flex justify-between items-center mb-8">
-              <div>
-                  <h1 className="text-2xl font-bold text-gray-900 capitalize">
-                      {activeTab === 'overview' ? 'My Activity' : activeTab === 'history' ? 'Booking History' : 'Notification Center'}
-                  </h1>
-                  <p className="text-gray-500 text-sm">Welcome back, {user.name}!</p>
-              </div>
-          </header>
+        {/* Main Content */}
+        <div className="flex-1 ml-64 p-8 overflow-y-auto">
+            <header className="flex justify-between items-center mb-8">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900 capitalize">
+                        {activeTab === 'overview' ? 'My Activity' : activeTab === 'history' ? 'Booking History' : 'Notification Center'}
+                    </h1>
+                    <p className="text-gray-500 text-sm">Welcome back, {user.name}!</p>
+                </div>
+            </header>
 
-          {activeTab === 'overview' && renderOverview()}
-          {activeTab === 'history' && renderHistory()}
-          {activeTab === 'notifications' && renderNotifications()}
-      </div>
-    </div>
+            {activeTab === 'overview' && renderOverview()}
+            {activeTab === 'history' && renderHistory()}
+            {activeTab === 'notifications' && renderNotifications()}
+        </div>
+        </div>
+
+        {/* Review Modal */}
+        <SalonReviewModal 
+            isOpen={isReviewModalOpen} 
+            onClose={() => setIsReviewModalOpen(false)}
+            appointment={reviewTarget}
+            onSubmit={handleReviewSubmit}
+        />
+    </>
   );
 };
 
