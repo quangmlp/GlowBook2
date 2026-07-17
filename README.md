@@ -2,75 +2,84 @@
 
 # ✨ GlowBook ✨
 
-**Nền tảng Đặt lịch Salon & Tư vấn Tóc AI Thông minh**
+**An Intelligent Salon Booking & AI-Powered Hair Consultation Platform**
 
 </div>
 
 ---
 
-## 📖 Giới thiệu
+## 📖 Introduction
 
-**GlowBook** là một giải pháp toàn diện giúp kết nối khách hàng với các salon làm đẹp uy tín. Không chỉ đơn thuần là đặt lịch, GlowBook mang đến trải nghiệm cá nhân hóa độc đáo với **AI Stylist** - trợ lý ảo sử dụng trí tuệ nhân tạo để tư vấn kiểu tóc, màu sắc phù hợp nhất với khuôn mặt và phong cách của từng người dùng.
+**GlowBook** is a comprehensive solution designed to connect customers with reputable beauty salons. Beyond conventional appointment booking, GlowBook delivers a unique personalized experience through **AI Stylist**—an artificial intelligence-powered virtual assistant that recommends the most suitable hairstyles and hair colors based on each user’s facial features and personal style.
 
-Dự án được thiết kế với giao diện hiện đại, trực quan và tối ưu hóa trải nghiệm cho cả Khách hàng, Chủ Salon và Quản trị viên.
+The project is designed with a modern, intuitive interface and optimized user experiences for Customers, Salon Owners, and Administrators.
 
-## 🌟 Tính năng nổi bật
+## 🌟 Key Features
 
-### 🤖 AI Stylist & Tư vấn thông minh
-*   Sử dụng công nghệ **Google Gemini AI** để phân tích đặc điểm khuôn mặt.
-*   Gợi ý kiểu tóc, màu nhuộm theo xu hướng và phong cách cá nhân.
-*   Trò chuyện trực tiếp với trợ lý ảo để nhận lời khuyên làm đẹp.
+### 🤖 AI Stylist & Intelligent Consultation
 
-### 📅 Đặt lịch hẹn tiện lợi
-*   Tìm kiếm Salon và Stylist dễ dàng.
-*   Xem lịch trống theo thời gian thực và đặt chỗ chỉ trong vài cú chạm.
-*   Thay đổi hoặc hủy lịch hẹn linh hoạt.
+* Utilizes **Google Gemini AI** technology to analyze facial features.
+* Recommends trending hairstyles and hair colors based on individual preferences and styles.
+* Enables direct conversations with the virtual assistant to receive beauty advice.
 
-### 💼 Hệ thống quản lý chuyên nghiệp
-*   **User Dashboard:** Quản lý lịch hẹn cá nhân, lịch sử dịch vụ và danh sách yêu thích.
-*   **Business Dashboard:** Dành cho chủ Salon quản lý nhân viên, doanh thu và lịch trình làm việc.
-*   **Admin Dashboard:** Quản trị toàn bộ hệ thống người dùng và đối tác.
+### 📅 Convenient Appointment Booking
 
-### 💬 Tương tác & Đánh giá
-*   Hệ thống Review và Feedback minh bạch giúp nâng cao chất lượng dịch vụ.
-*   Gửi phản hồi trực tiếp tới ban quản trị hoặc chủ salon.
+* Easily search for salons and stylists.
+* View real-time availability and book appointments in just a few taps.
+* Flexibly reschedule or cancel appointments.
 
-## 🛠 Công nghệ sử dụng
+### 💼 Professional Management System
 
-Dự án được xây dựng trên nền tảng các công nghệ web hiện đại nhất:
+* **User Dashboard:** Manage personal appointments, service history, and favorite lists.
+* **Business Dashboard:** Enables salon owners to manage employees, revenue, and work schedules.
+* **Admin Dashboard:** Provides comprehensive administration of all system users and partners.
 
-| Lĩnh vực | Công nghệ |
-| :--- | :--- |
-| **Frontend** | React, TypeScript, Vite |
-| **UI / Styling** | Tailwind CSS, Lucide React |
+### 💬 Interaction & Reviews
+
+* A transparent Review and Feedback system that helps improve service quality.
+* Submit feedback directly to the administration team or salon owners.
+
+## 🛠 Technologies Used
+
+The project is built using the latest modern web technologies:
+
+| Area               | Technologies                      |
+| :----------------- | :-------------------------------- |
+| **Frontend**       | React, TypeScript, Vite           |
+| **UI / Styling**   | Tailwind CSS, Lucide React        |
 | **AI Integration** | Google Gemini API (@google/genai) |
-| **Backend & Data** | Firebase, EmailJS |
+| **Backend & Data** | Firebase, EmailJS                 |
 
-## 🚀 Hướng dẫn cài đặt
+## 🚀 Installation Guide
 
-Để chạy dự án này trên máy của bạn, hãy làm theo các bước sau:
+To run this project on your local machine, follow the steps below:
 
-1.  **Cài đặt thư viện:**
-    Mở terminal tại thư mục dự án và chạy lệnh:
-    ```bash
-    npm install
-    ```
+1. **Install dependencies:**
+   Open a terminal in the project directory and run:
 
-2.  **Cấu hình môi trường:**
-    *   Tạo file `.env` (hoặc cập nhật file môi trường tương ứng).
-    *   Thêm API Key của Google Gemini vào file `.env` để kích hoạt tính năng AI Stylist:
-    ```env
-    API_KEY=your_google_gemini_api_key
-    ```
+   ```bash
+   npm install
+   ```
 
-3.  **Khởi chạy ứng dụng:**
-    ```bash
-    npm run dev
-    ```
-    Truy cập vào đường dẫn local hiển thị trên terminal để trải nghiệm ứng dụng.
+2. **Configure the environment:**
+
+   * Create a `.env` file (or update the corresponding environment file).
+   * Add your Google Gemini API Key to the `.env` file to enable the AI Stylist feature:
+
+   ```env
+   API_KEY=your_google_gemini_api_key
+   ```
+
+3. **Start the application:**
+
+   ```bash
+   npm run dev
+   ```
+
+   Open the local URL displayed in the terminal to access the application.
 
 ---
 
 <div align="center">
-  <i>Được phát triển với niềm đam mê công nghệ và sáng tạo.</i>
+  <i>Developed with a passion for technology and creativity.</i>
 </div>
